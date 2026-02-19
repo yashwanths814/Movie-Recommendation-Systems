@@ -1,21 +1,22 @@
-export async function omdbSearch(title: string) {
-  const key = process.env.OMDB_API_KEY;
+const BASE = "https://www.omdbapi.com/";
 
+function mustKey() {
+  const key = process.env.OMDB_API_KEY;
   if (!key) {
     throw new Error("Missing OMDB_API_KEY (check .env / .env.local and restart server)");
   }
+  return key;
+}
 
-  const url = `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${encodeURIComponent(key)}`;
-
+async function safeFetchJson(url: string) {
   let res: Response;
+
   try {
     res = await fetch(url, { cache: "no-store" });
   } catch (e: any) {
-    // This happens if DNS/network is blocked
     throw new Error(`Network error while calling OMDb: ${e?.message || e}`);
   }
 
-  // OMDb usually returns 200 even for errors, but keep this anyway:
   const text = await res.text().catch(() => "");
 
   if (!res.ok) {
@@ -33,10 +34,22 @@ export async function omdbSearch(title: string) {
     throw new Error(`OMDb returned non-JSON: ${text.slice(0, 200)}`);
   }
 
-  // ✅ This is where OMDb tells “Invalid API key”, “Too many results”, etc.
+  // OMDb errors come in JSON with Response:"False"
   if (data?.Response === "False") {
     throw new Error(`OMDb error: ${data?.Error || "Unknown error"}`);
   }
 
   return data;
+}
+
+export async function omdbSearch(title: string) {
+  const key = mustKey();
+  const url = `${BASE}?s=${encodeURIComponent(title)}&apikey=${encodeURIComponent(key)}`;
+  return safeFetchJson(url);
+}
+
+export async function omdbById(imdbID: string) {
+  const key = mustKey();
+  const url = `${BASE}?i=${encodeURIComponent(imdbID)}&apikey=${encodeURIComponent(key)}`;
+  return safeFetchJson(url);
 }

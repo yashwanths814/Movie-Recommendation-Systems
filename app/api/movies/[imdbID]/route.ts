@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server";
-import { omdbSearch } from "../../../lib/omdb"; // adjust if your lib is in app/lib
+import { omdbById } from "../../../lib/omdb";
 
-export async function GET(req: Request) {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ imdbID: string }> }
+) {
   try {
-    const { searchParams } = new URL(req.url);
-    const q = (searchParams.get("q") || "").trim();
+    // ✅ FIX: params is a Promise in your Next.js version
+    const { imdbID } = await ctx.params;
+    const id = (imdbID || "").trim();
 
-    if (!q) return NextResponse.json({ Search: [], totalResults: "0" }, { status: 200 });
+    if (!id) {
+      return NextResponse.json({ error: "Missing imdbID" }, { status: 400 });
+    }
 
-    const data = await omdbSearch(q);
+    const data = await omdbById(id);
     return NextResponse.json(data, { status: 200 });
   } catch (err: any) {
-    // ✅ Always return JSON on error
     return NextResponse.json(
-      { error: err?.message || "Search API failed" },
+      { error: err?.message || "Failed to fetch movie" },
       { status: 500 }
     );
   }

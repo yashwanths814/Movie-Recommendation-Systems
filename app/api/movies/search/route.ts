@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { omdbSearch } from "../../../lib/omdb"; // if your lib is in app/lib
+import { omdbSearch } from "../../../lib/omdb";
 
 export async function GET(req: Request) {
   try {
