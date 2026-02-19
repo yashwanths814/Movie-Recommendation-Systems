@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  imdbID    String   @unique
+  title     String
+  poster    String?
+  year      String?
+  type      String?
+  createdAt DateTime @default(now())
+}
+
+model MovieCache {
+  imdbID      String   @id
+  payloadJson Json
+  updatedAt   DateTime @updatedAt
+}
